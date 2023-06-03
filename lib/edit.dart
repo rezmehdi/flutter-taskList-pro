@@ -33,7 +33,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         onPressed: () {
           final task = TaskEntity();
           task.name = _controller.text;
-          task.priority = Priority.low;
+          task.priority = widget.task.priority;
           task.isCompleted = false;
           if (task.isInBox) {
             task.save();
@@ -64,7 +64,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   flex: 1,
                   child: PriorityRadioButton(
                     label: 'High',
-                    color: primaryColor,
+                    color: highPriority,
                     isSelected: widget.task.priority == Priority.high,
                     onTap: () {
                       setState(() {
@@ -80,7 +80,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   flex: 1,
                   child: PriorityRadioButton(
                     label: 'Normal',
-                    color: Color(0xffF09819),
+                    color: normalPriority,
                     isSelected: widget.task.priority == Priority.normal,
                     onTap: () {
                       setState(() {
@@ -96,7 +96,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   flex: 1,
                   child: PriorityRadioButton(
                     label: 'Low',
-                    color: Color(0xff3BE1F1),
+                    color: lowPriority,
                     isSelected: widget.task.priority == Priority.low,
                     onTap: () {
                       setState(() {
