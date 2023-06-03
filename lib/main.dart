@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:task_list/data.dart';
+import 'package:task_list/edit.dart';
 
 const taskBoxName = 'tasks';
 void main() async {
@@ -26,8 +27,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final primaryTextColor = Color(0xff1D230);
-
+    const primaryTextColor = Color(0xff1D2830);
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -42,6 +42,7 @@ class MyApp extends StatelessWidget {
           primaryVariant: primaryVariantColor,
           // primaryContainer: Color(0xff5c0AFF),
           background: Color(0xffF3F5F8),
+          surface: Colors.white,
           onSurface: primaryTextColor,
           onBackground: primaryTextColor,
           secondary: primaryColor,
@@ -69,8 +70,10 @@ class HomeScreen extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => EditTaskScreen()));
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => EditTaskScreen(
+                    task: TaskEntity(),
+                  )));
         },
         label: const Row(
           children: [
@@ -296,44 +299,6 @@ class MyCheckBox extends StatelessWidget {
               size: 16,
             )
           : null,
-    );
-  }
-}
-
-class EditTaskScreen extends StatelessWidget {
-  TextEditingController _controller = TextEditingController();
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Task'),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          final task = TaskEntity();
-          task.name = _controller.text;
-          task.priority = Priority.low;
-          task.isCompleted = false;
-          if (task.isInBox) {
-            task.save();
-          } else {
-            final Box<TaskEntity> box = Hive.box(taskBoxName);
-            box.add(task);
-          }
-          Navigator.of(context).pop();
-        },
-        label: Text('Save Changes'),
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              label: Text('Add a task for today...'),
-            ),
-          )
-        ],
-      ),
     );
   }
 }
