@@ -36,10 +36,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         inputDecorationTheme: InputDecorationTheme(
-          border: InputBorder.none,
-          labelStyle: TextStyle(color: secondaryTextColor),
-          iconColor: secondaryTextColor,
-        ),
+            border: InputBorder.none,
+            labelStyle: TextStyle(color: secondaryTextColor),
+            iconColor: secondaryTextColor,
+            floatingLabelBehavior: FloatingLabelBehavior.never),
         colorScheme: ColorScheme.light(
           primary: primaryColor,
           onPrimary: Colors.white,
@@ -60,15 +60,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController controller = TextEditingController();
+  final ValueNotifier<String> searchKeywordNotifier = ValueNotifier('');
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ]),
                       child: TextField(
                         onChanged: (value) {
-                          setState(() {});
+                          // setState(() {});
+                          searchKeywordNotifier.value = controller.text;
                         },
                         controller: controller,
                         decoration: const InputDecoration(
@@ -155,90 +151,98 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Expanded(
-              child: ValueListenableBuilder<Box<TaskEntity>>(
-                valueListenable: box.listenable(),
-                builder: (context, box, child) {
-                  final items;
-                  if (controller.text.isEmpty) {
-                    items = box.values.toList();
-                  } else {
-                    items = box.values
-                        .where((task) => task.name.contains(controller.text))
-                        .toList();
-                  }
-                  if (items.isNotEmpty) {
-                    return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-                      itemCount: items.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+              child: ValueListenableBuilder<String>(
+                valueListenable: searchKeywordNotifier,
+                builder: (context, value, child) {
+                  return ValueListenableBuilder<Box<TaskEntity>>(
+                    valueListenable: box.listenable(),
+                    builder: (context, box, child) {
+                      final items;
+                      if (controller.text.isEmpty) {
+                        items = box.values.toList();
+                      } else {
+                        items = box.values
+                            .where(
+                                (task) => task.name.contains(controller.text))
+                            .toList();
+                      }
+                      if (items.isNotEmpty) {
+                        return ListView.builder(
+                          padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
+                          itemCount: items.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Today',
-                                    style: themeData.textTheme.titleLarge!
-                                        .apply(fontSizeFactor: 0.9),
-                                  ),
-                                  Container(
-                                    width: 70,
-                                    height: 3,
-                                    margin: EdgeInsets.only(top: 4),
-                                    decoration: BoxDecoration(
-                                        color: primaryColor,
-                                        borderRadius:
-                                            BorderRadius.circular(1.5)),
-                                  )
-                                ],
-                              ),
-                              MaterialButton(
-                                  color: const Color(0xffEAEFF5),
-                                  textColor: secondaryTextColor,
-                                  elevation: 0,
-                                  onPressed: () {
-                                    box.clear();
-                                  },
-                                  child: const Row(
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('Delete All'),
-                                      SizedBox(
-                                        width: 4,
+                                      Text(
+                                        'Today',
+                                        style: themeData.textTheme.titleLarge!
+                                            .apply(fontSizeFactor: 0.9),
                                       ),
-                                      Icon(
-                                        CupertinoIcons.delete_solid,
-                                        size: 18,
-                                      ),
+                                      Container(
+                                        width: 70,
+                                        height: 3,
+                                        margin: EdgeInsets.only(top: 4),
+                                        decoration: BoxDecoration(
+                                            color: primaryColor,
+                                            borderRadius:
+                                                BorderRadius.circular(1.5)),
+                                      )
                                     ],
-                                  ))
-                            ],
-                          );
-                        } else {
-                          // final TaskEntity task =
-                          //     box.values.toList()[index - 1];
-                          final TaskEntity task = items[index - 1];
-                          return TaskItem(task: task);
-                        }
-                      },
-                    );
-                  } else {
-                    return const EmptyState();
-                  }
+                                  ),
+                                  MaterialButton(
+                                      color: const Color(0xffEAEFF5),
+                                      textColor: secondaryTextColor,
+                                      elevation: 0,
+                                      onPressed: () {
+                                        box.clear();
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Text('Delete All'),
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Icon(
+                                            CupertinoIcons.delete_solid,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ))
+                                ],
+                              );
+                            } else {
+                              // final TaskEntity task =
+                              //     box.values.toList()[index - 1];
+                              final TaskEntity task = items[index - 1];
+                              return TaskItem(task: task);
+                            }
+                          },
+                        );
+                      } else {
+                        return const EmptyState();
+                      }
+                    },
+                    // child: ListView.builder(
+                    //   itemCount: box.values.length,
+                    //   itemBuilder: (context, index) {
+                    //     final Task task = box.values.toList()[index];
+                    //     return Container(
+                    //       child: Text(
+                    //         task.name,
+                    //         style: TextStyle(fontSize: 24),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+                  );
                 },
-                // child: ListView.builder(
-                //   itemCount: box.values.length,
-                //   itemBuilder: (context, index) {
-                //     final Task task = box.values.toList()[index];
-                //     return Container(
-                //       child: Text(
-                //         task.name,
-                //         style: TextStyle(fontSize: 24),
-                //       ),
-                //     );
-                //   },
-                // ),
               ),
             ),
           ],
