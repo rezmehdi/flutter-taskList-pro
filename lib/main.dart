@@ -220,7 +220,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 class TaskItem extends StatefulWidget {
-  static const double height = 84;
+  static const double height = 74;
   static const double borderRadius = 8;
   const TaskItem({
     super.key,
@@ -253,9 +253,12 @@ class _TaskItemState extends State<TaskItem> {
 
     return InkWell(
       onTap: () {
-        setState(() {
-          widget.task.isCompleted = !widget.task.isCompleted;
-        });
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          return EditTaskScreen(task: widget.task);
+        }));
+        // setState(() {
+        //   widget.task.isCompleted = !widget.task.isCompleted;
+        // });
       },
       child: Container(
         height: TaskItem.height,
@@ -272,6 +275,11 @@ class _TaskItemState extends State<TaskItem> {
           children: [
             MyCheckBox(
               value: widget.task.isCompleted,
+              onTap: () {
+                setState(() {
+                  widget.task.isCompleted = !widget.task.isCompleted;
+                });
+              },
             ),
             const SizedBox(
               width: 16,
@@ -282,7 +290,7 @@ class _TaskItemState extends State<TaskItem> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 24,
+                  // fontSize: 24,
                   decoration: widget.task.isCompleted
                       ? TextDecoration.lineThrough
                       : null,
@@ -311,26 +319,31 @@ class _TaskItemState extends State<TaskItem> {
 
 class MyCheckBox extends StatelessWidget {
   final bool value;
+  final GestureTapCallback onTap;
 
-  const MyCheckBox({super.key, required this.value});
+  const MyCheckBox({super.key, required this.value, required this.onTap});
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData = Theme.of(context);
-    return Container(
-      height: 24,
-      width: 24,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: !value ? Border.all(color: secondaryTextColor, width: 2) : null,
-        color: value ? primaryColor : null,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 24,
+        width: 24,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border:
+              !value ? Border.all(color: secondaryTextColor, width: 2) : null,
+          color: value ? primaryColor : null,
+        ),
+        child: value
+            ? Icon(
+                CupertinoIcons.check_mark,
+                color: themeData.colorScheme.onPrimary,
+                size: 16,
+              )
+            : null,
       ),
-      child: value
-          ? Icon(
-              CupertinoIcons.check_mark,
-              color: themeData.colorScheme.onPrimary,
-              size: 16,
-            )
-          : null,
     );
   }
 }
