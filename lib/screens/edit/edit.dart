@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:task_list/data/data.dart';
+import 'package:task_list/data/repo/repository.dart';
 
 import '../../main.dart';
 
@@ -35,13 +37,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           // final task = TaskEntity();
           widget.task.name = _controller.text;
           widget.task.priority = widget.task.priority;
-          widget.task.isCompleted = false;
-          if (widget.task.isInBox) {
-            widget.task.save();
-          } else {
-            final Box<TaskEntity> box = Hive.box(taskBoxName);
-            box.add(widget.task);
-          }
+          final repository =
+              Provider.of<Repository<TaskEntity>>(context, listen: false);
+          repository.createOrUpdate(widget.task);
+
           Navigator.of(context).pop();
         },
         label: const Row(

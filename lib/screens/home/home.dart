@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:task_list/data/data.dart';
+import 'package:task_list/data/repo/repository.dart';
 import 'package:task_list/main.dart';
 import 'package:task_list/screens/edit/edit.dart';
 import 'package:task_list/widgets.dart';
@@ -13,7 +15,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<TaskEntity>(taskBoxName);
+    // final box = Hive.box<TaskEntity>(taskBoxName);
     final ThemeData themeData = Theme.of(context);
     return Scaffold(
       // appBar: AppBar(
@@ -100,93 +102,27 @@ class HomeScreen extends StatelessWidget {
               child: ValueListenableBuilder<String>(
                 valueListenable: searchKeywordNotifier,
                 builder: (context, value, child) {
-                  return ValueListenableBuilder<Box<TaskEntity>>(
-                    valueListenable: box.listenable(),
-                    builder: (context, box, child) {
-                      final items;
-                      if (controller.text.isEmpty) {
-                        items = box.values.toList();
-                      } else {
-                        items = box.values
-                            .where(
-                                (task) => task.name.contains(controller.text))
-                            .toList();
-                      }
-                      if (items.isNotEmpty) {
-                        return ListView.builder(
-                          padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-                          itemCount: items.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Today',
-                                        style: themeData.textTheme.titleLarge!
-                                            .apply(fontSizeFactor: 0.9),
-                                      ),
-                                      Container(
-                                        width: 70,
-                                        height: 3,
-                                        margin: EdgeInsets.only(top: 4),
-                                        decoration: BoxDecoration(
-                                            color: primaryColor,
-                                            borderRadius:
-                                                BorderRadius.circular(1.5)),
-                                      )
-                                    ],
-                                  ),
-                                  MaterialButton(
-                                      color: const Color(0xffEAEFF5),
-                                      textColor: secondaryTextColor,
-                                      elevation: 0,
-                                      onPressed: () {
-                                        box.clear();
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Text('Delete All'),
-                                          SizedBox(
-                                            width: 4,
-                                          ),
-                                          Icon(
-                                            CupertinoIcons.delete_solid,
-                                            size: 18,
-                                          ),
-                                        ],
-                                      ))
-                                ],
-                              );
+                  // final Repository<TaskEntity> repository =
+                  //     Provider.of<Repository<TaskEntity>>(context);
+                  return Consumer<Repository<TaskEntity>>(
+                    builder: (context, repository, child) {
+                      return FutureBuilder<List<TaskEntity>>(
+                        future:
+                            repository.getAll(searchKeyword: controller.text),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            if (snapshot.data!.isNotEmpty) {
+                              return TaskList(
+                                  items: snapshot.data!, themeData: themeData);
                             } else {
-                              // final TaskEntity task =
-                              //     box.values.toList()[index - 1];
-                              final TaskEntity task = items[index - 1];
-                              return TaskItem(task: task);
+                              return const EmptyState();
                             }
-                          },
-                        );
-                      } else {
-                        return const EmptyState();
-                      }
+                          } else {
+                            return const CircularProgressIndicator();
+                          }
+                        },
+                      );
                     },
-                    // child: ListView.builder(
-                    //   itemCount: box.values.length,
-                    //   itemBuilder: (context, index) {
-                    //     final Task task = box.values.toList()[index];
-                    //     return Container(
-                    //       child: Text(
-                    //         task.name,
-                    //         style: TextStyle(fontSize: 24),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
                   );
                 },
               ),
@@ -194,6 +130,79 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class TaskList extends StatelessWidget {
+  const TaskList({
+    super.key,
+    required this.items,
+    required this.themeData,
+  });
+
+  final List<TaskEntity> items;
+  final ThemeData themeData;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
+      itemCount: items.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Today',
+                    style: themeData.textTheme.titleLarge!
+                        .apply(fontSizeFactor: 0.9),
+                  ),
+                  Container(
+                    width: 70,
+                    height: 3,
+                    margin: EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(1.5)),
+                  )
+                ],
+              ),
+              MaterialButton(
+                  color: const Color(0xffEAEFF5),
+                  textColor: secondaryTextColor,
+                  elevation: 0,
+                  onPressed: () {
+                    final Repository<TaskEntity> taskRepository =
+                        Provider.of<Repository<TaskEntity>>(context,
+                            listen: false);
+                    taskRepository.deleteAll();
+                  },
+                  child: const Row(
+                    children: [
+                      Text('Delete All'),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      Icon(
+                        CupertinoIcons.delete_solid,
+                        size: 18,
+                      ),
+                    ],
+                  ))
+            ],
+          );
+        } else {
+          // final TaskEntity task =
+          //     box.values.toList()[index - 1];
+          final TaskEntity task = items[index - 1];
+          return TaskItem(task: task);
+        }
+      },
     );
   }
 }
@@ -242,7 +251,9 @@ class _TaskItemState extends State<TaskItem> {
       onLongPress: () {
         // final box = Hive.box<TaskEntity>(taskBoxName);
         // box.delete(widget.task);
-        widget.task.delete();
+        final repository =
+            Provider.of<Repository<TaskEntity>>(context, listen: false);
+        repository.deleteById(widget.task.id);
       },
       child: Container(
         height: TaskItem.height,
