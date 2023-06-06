@@ -1,24 +1,30 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:task_list/data/data.dart';
 import 'package:task_list/data/repo/repository.dart';
+import 'package:task_list/screens/edit/cubit/edit_task_cubit.dart';
 
 import '../../main.dart';
 
 class EditTaskScreen extends StatefulWidget {
-  final TaskEntity task;
-
-  EditTaskScreen({super.key, required this.task});
+  EditTaskScreen({super.key});
 
   @override
   State<EditTaskScreen> createState() => _EditTaskScreenState();
 }
 
 class _EditTaskScreenState extends State<EditTaskScreen> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.task.name);
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    _controller = TextEditingController(
+        text: context.read<EditTaskCubit>().state.task.name);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +41,13 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // final task = TaskEntity();
-          widget.task.name = _controller.text;
-          widget.task.priority = widget.task.priority;
-          final repository =
-              Provider.of<Repository<TaskEntity>>(context, listen: false);
-          repository.createOrUpdate(widget.task);
+          // widget.task.name = _controller.text;
+          // widget.task.priority = widget.task.priority;
+          // final repository =
+          //     Provider.of<Repository<TaskEntity>>(context, listen: false);
+          // repository.createOrUpdate(widget.task);
 
+          context.read<EditTaskCubit>().onSaveChangesClick();
           Navigator.of(context).pop();
         },
         label: const Row(
@@ -57,58 +64,66 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Flex(
-              direction: Axis.horizontal,
-              children: [
-                Flexible(
-                  flex: 1,
-                  child: PriorityRadioButton(
-                    label: 'High',
-                    color: highPriority,
-                    isSelected: widget.task.priority == Priority.high,
-                    onTap: () {
-                      setState(() {
-                        widget.task.priority = Priority.high;
-                      });
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: 8,
-                ),
-                Flexible(
-                  flex: 1,
-                  child: PriorityRadioButton(
-                    label: 'Normal',
-                    color: normalPriority,
-                    isSelected: widget.task.priority == Priority.normal,
-                    onTap: () {
-                      setState(() {
-                        widget.task.priority = Priority.normal;
-                      });
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: 8,
-                ),
-                Flexible(
-                  flex: 1,
-                  child: PriorityRadioButton(
-                    label: 'Low',
-                    color: lowPriority,
-                    isSelected: widget.task.priority == Priority.low,
-                    onTap: () {
-                      setState(() {
-                        widget.task.priority = Priority.low;
-                      });
-                    },
-                  ),
-                ),
-              ],
+            BlocBuilder<EditTaskCubit, EditTaskState>(
+              builder: ((context, state) {
+                final priority = state.task.priority;
+                return Flex(
+                  direction: Axis.horizontal,
+                  children: [
+                    Flexible(
+                      flex: 1,
+                      child: PriorityRadioButton(
+                        label: 'High',
+                        color: highPriority,
+                        isSelected: priority == Priority.high,
+                        onTap: () {
+                          context
+                              .read<EditTaskCubit>()
+                              .onPriorityChanged(Priority.high);
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: PriorityRadioButton(
+                        label: 'Normal',
+                        color: normalPriority,
+                        isSelected: priority == Priority.normal,
+                        onTap: () {
+                          context
+                              .read<EditTaskCubit>()
+                              .onPriorityChanged(Priority.normal);
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: PriorityRadioButton(
+                        label: 'Low',
+                        color: lowPriority,
+                        isSelected: priority == Priority.low,
+                        onTap: () {
+                          context
+                              .read<EditTaskCubit>()
+                              .onPriorityChanged(Priority.low);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
             TextField(
               controller: _controller,
+              onChanged: (value) {
+                context.read<EditTaskCubit>().onTextChanged(value);
+              },
               decoration: InputDecoration(
                 label: Text(
                   'Add a task for today...',

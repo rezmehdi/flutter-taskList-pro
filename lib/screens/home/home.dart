@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:task_list/data/data.dart';
 import 'package:task_list/data/repo/repository.dart';
 import 'package:task_list/main.dart';
+import 'package:task_list/screens/edit/cubit/edit_task_cubit.dart';
 import 'package:task_list/screens/edit/edit.dart';
 import 'package:task_list/screens/home/bloc/task_list_bloc.dart';
 import 'package:task_list/widgets.dart';
@@ -27,8 +28,10 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => EditTaskScreen(
-                    task: TaskEntity(),
+              builder: (context) => BlocProvider<EditTaskCubit>(
+                    create: (context) => EditTaskCubit(
+                        TaskEntity(), context.read<Repository<TaskEntity>>()),
+                    child: EditTaskScreen(),
                   )));
         },
         label: const Row(
@@ -281,7 +284,11 @@ class _TaskItemState extends State<TaskItem> {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-          return EditTaskScreen(task: widget.task);
+          return BlocProvider<EditTaskCubit>(
+            create: (context) => EditTaskCubit(
+                widget.task, context.read<Repository<TaskEntity>>()),
+            child: EditTaskScreen(),
+          );
         }));
         // setState(() {
         //   widget.task.isCompleted = !widget.task.isCompleted;
